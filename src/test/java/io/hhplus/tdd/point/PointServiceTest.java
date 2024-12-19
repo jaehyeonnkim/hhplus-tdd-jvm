@@ -38,7 +38,7 @@ public class PointServiceTest {
 
     //id값이 0미만일 때
     @Test
-    @DisplayName("id가 0미만일 때 INVALID_ID 에러 메시지 반환")
+    @DisplayName("id가 -500일 때 INVALID_ID 에러 메시지 반환")
     void 포인트_조회_실패_아이디_음수(){
         assertThatThrownBy(() -> pointService.getPoint(-500))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -85,7 +85,7 @@ public class PointServiceTest {
     @DisplayName("2_000_000원 포인트 충전 시 INVALID_AMOUNT 에러메시지 반환")
     void 포인트_충전_실패_최대한도_초과(){
         //given
-        given(pointService.getBalance(111L)).willReturn(
+        given(userPointTable.selectById(111L)).willReturn(
                 new UserPoint(111L,100,100)
         );
         //then
@@ -99,7 +99,7 @@ public class PointServiceTest {
     @DisplayName("1_000_000원 포인트 충전 시 잔고초과로 EXCEED_BALANCE 에러메시지 반환")
     void 포인트_충전_실패_잔고_한도초과() {
         //given
-        given(pointService.getBalance(111L)).willReturn(
+        given(userPointTable.selectById(111L)).willReturn(
                 new UserPoint(111L,1_000_000,100)
         );
 
@@ -108,5 +108,46 @@ public class PointServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("EXCEED_BALANCE");
 
+    }
+
+    /**
+     * 3. 포인트 사용 TEST
+     */
+    //사용금액이 0일때
+    @Test
+    @DisplayName("0원 포인트 사용 시 INVALID_AMOUNT 에러메시지 반환")
+    void 포인트_사용_실패_포인트_제로(){
+        assertThatThrownBy(() -> pointService.usePoint(111, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("INVALID_AMOUNT");
+    }
+    //사용금액이 0이하일때
+    @Test
+    @DisplayName("-500원 포인트 사용시 INVALID_AMOUNT 에러메시지 반환")
+    void 포인트_사용_실패_포인트_음수(){
+        assertThatThrownBy(() -> pointService.usePoint(111,-500))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("INVALID_AMOUNT");
+    }
+    //최고 사용금액을 초과할 때
+    @Test
+    @DisplayName("2_000_000원 포인트 사용 시 INVALID_AMOUNT 에러메시지 반환")
+    void 포인트_사용_실패_포인트_초과(){
+        assertThatThrownBy(() -> pointService.usePoint(111, 2_000_000))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("INVALID_AMOUNT");
+    }
+    //잔고금액보다 많이 사용할 때
+    @Test
+    @DisplayName("잔고금액이 1_000원일 때 2_000원 사용 시 INSUFFICIENT_BALANCE 에러메시지 반환")
+    void 포인트_사용_실패_잔고금액_초과(){
+        //given
+        given(userPointTable.selectById(111L))
+                .willReturn(new UserPoint(111L,1_000,100));
+
+        //when&Then
+        assertThatThrownBy(() -> pointService.usePoint(111, 2_000))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("INSUFFICIENT_BALANCE");
     }
 }

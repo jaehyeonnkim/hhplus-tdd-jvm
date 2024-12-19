@@ -58,12 +58,33 @@ public class PointService {
 
         //유저 포인트 업데이트
         userPointTable.insertOrUpdate(id, newBalance);
+        pointHistoryTable.insert(id, point, TransactionType.CHARGE, System.currentTimeMillis());
+
         return userPoint;
     }
 
-    public UserPoint getBalance(long id) {
-        return userPointTable.selectById(id);
-    }
+    //포인트 사용
+    public UserPoint usePoint(long id, long point) throws Exception {
+        //0보다 작거나 초과할 때
+        if (point <= 0 || point > MAX_POINT) {
+            throw new IllegalArgumentException(
+                    new ErrorResponse("INVALID_AMOUNT", "충전할 포인트가 유효하지 않습니다").toString());
+        }
+        UserPoint userPoint = userPointTable.selectById(id);
+        //포인트 잔고 계산
+        long newBalance = userPoint.point() - point;
+        //잔고보다 사용금액이 많을 때
+        if (newBalance < 0){
+            throw new IllegalArgumentException(
+                    new ErrorResponse("INSUFFICIENT_BALANCE", "잔고금액을 초과하여 사용할 수 없습니다.").toString());
+        }
 
+        //유저 포인트 업데이트
+        userPointTable.insertOrUpdate(id, newBalance);
+        pointHistoryTable.insert(id, point, TransactionType.USE, System.currentTimeMillis());
+
+
+        return userPoint;
+    }
 
 }
