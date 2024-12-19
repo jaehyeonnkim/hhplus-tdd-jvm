@@ -3,8 +3,10 @@ package io.hhplus.tdd.point;
 import io.hhplus.tdd.ErrorResponse;
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.database.PointHistoryTable;
-import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.ErrorResponseException;
+
+import java.util.List;
 
 @Service
 public class PointService {
@@ -37,7 +39,7 @@ public class PointService {
     }
 
     //포인트 충전
-    public UserPoint chargePoints(long point, long id) throws Exception {
+    public UserPoint chargePoint(long point, long id) {
         //포인트가 최대한도거나 0, 음수일 때
         if (point <= 0 || point > MAX_POINT) {
             throw new IllegalArgumentException(
@@ -64,7 +66,7 @@ public class PointService {
     }
 
     //포인트 사용
-    public UserPoint usePoint(long id, long point) throws Exception {
+    public UserPoint usePoint(long id, long point) {
         //0보다 작거나 초과할 때
         if (point <= 0 || point > MAX_POINT) {
             throw new IllegalArgumentException(
@@ -87,4 +89,20 @@ public class PointService {
         return userPoint;
     }
 
+    //포인트 내역 조회
+    public List<PointHistory> getPointHistory(long id) {
+        //id가 유효하지 않을 때
+        if(id <= 0){
+            throw new IllegalArgumentException(
+                    new ErrorResponse("INVALID_ID", "유효하지 않은 ID입니다.").toString());
+        }
+
+        List<PointHistory> pointHistory = pointHistoryTable.selectAllByUserId(id);
+        //포인트 내역이 null일 때
+        if(pointHistory.isEmpty()){
+            throw new NullPointerException(
+                    new ErrorResponse("NULL_EXCEPTION", "포인트 정보를 찾을 수 없습니다").toString());
+        }
+        return pointHistory;
+    }
 }
