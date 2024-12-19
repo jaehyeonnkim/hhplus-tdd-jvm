@@ -26,7 +26,8 @@ public class PointController {
     public UserPoint point(
             @PathVariable long id
     ) {
-        return new UserPoint(0, 0, 0);
+        UserPoint userpoint = pointService.getPoint(id);
+        return userpoint;
     }
 
     /**
@@ -36,7 +37,8 @@ public class PointController {
     public List<PointHistory> history(
             @PathVariable long id
     ) {
-        return List.of();
+        List<PointHistory> histories = pointService.getPointHistory(id);
+        return histories;
     }
 
     /**
@@ -47,11 +49,8 @@ public class PointController {
             @PathVariable long id,
             @RequestBody long amount
     ) {
-        try {
-            return pointService.chargePoints(id,amount);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        UserPoint userPoint = pointService.chargePoint(id, amount);
+        return userPoint;
     }
 
     /**
@@ -62,6 +61,7 @@ public class PointController {
             @PathVariable long id,
             @RequestBody long amount
     ) {
-        return new UserPoint(0, 0, 0);
+        UserPoint userPoint = pointService.usePoint(id, amount);
+        return userPoint;
     }
 }
